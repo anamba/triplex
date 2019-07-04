@@ -10,6 +10,7 @@ defmodule Mix.Tasks.Triplex.Mysql.Install do
 
   alias Ecto.Migrator
   alias Ecto.Adapters.MySQL
+  alias Ecto.Adapters.MyXQL
   alias Mix.Ecto
   alias Mix.Generator
   alias Mix.Project
@@ -26,8 +27,10 @@ defmodule Mix.Tasks.Triplex.Mysql.Install do
     Enum.each(repos, fn repo ->
       Ecto.ensure_repo(repo, args)
 
-      if repo.__adapter__ != MySQL do
-        Mix.raise("the tenant table only makes sense for MySQL repositories")
+      if repo.__adapter__ not in [MySQL, MyXQL] do
+        Mix.raise(
+          "the tenant table only makes sense for MySQL repositories #{inspect(repo.__adapter__)}"
+        )
       end
 
       path = Path.relative_to(Migrator.migrations_path(repo), Project.app_path())

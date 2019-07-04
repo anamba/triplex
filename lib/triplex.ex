@@ -150,6 +150,7 @@ defmodule Triplex do
       sql =
         case repo.__adapter__ do
           Ecto.Adapters.MySQL -> "CREATE DATABASE #{to_prefix(tenant)}"
+          Ecto.Adapters.MyXQL -> "CREATE DATABASE #{to_prefix(tenant)}"
           Ecto.Adapters.Postgres -> "CREATE SCHEMA \"#{to_prefix(tenant)}\""
         end
 
@@ -184,6 +185,10 @@ defmodule Triplex do
         sql = "INSERT INTO #{Triplex.config().tenant_table} (name) VALUES (?)"
         SQL.query(repo, sql, [tenant])
 
+      Ecto.Adapters.MyXQL ->
+        sql = "INSERT INTO #{Triplex.config().tenant_table} (name) VALUES (?)"
+        SQL.query(repo, sql, [tenant])
+
       Ecto.Adapters.Postgres ->
         {:ok, :skipped}
     end
@@ -192,6 +197,9 @@ defmodule Triplex do
   defp remove_from_tenants_table(tenant, repo) do
     case repo.__adapter__ do
       Ecto.Adapters.MySQL ->
+        SQL.query(repo, "DELETE FROM #{Triplex.config().tenant_table} WHERE NAME = ?", [tenant])
+
+      Ecto.Adapters.MyXQL ->
         SQL.query(repo, "DELETE FROM #{Triplex.config().tenant_table} WHERE NAME = ?", [tenant])
 
       Ecto.Adapters.Postgres ->
@@ -224,6 +232,7 @@ defmodule Triplex do
       sql =
         case repo.__adapter__ do
           Ecto.Adapters.MySQL -> "DROP DATABASE #{to_prefix(tenant)}"
+          Ecto.Adapters.MyXQL -> "DROP DATABASE #{to_prefix(tenant)}"
           Ecto.Adapters.Postgres -> "DROP SCHEMA \"#{to_prefix(tenant)}\" CASCADE"
         end
 
@@ -253,6 +262,9 @@ defmodule Triplex do
         Ecto.Adapters.MySQL ->
           {:error, "you cannot rename tenants in a MySQL database."}
 
+        Ecto.Adapters.MySXL ->
+          {:error, "you cannot rename tenants in a MySQL database."}
+
         Ecto.Adapters.Postgres ->
           sql = """
           ALTER SCHEMA \"#{to_prefix(old_tenant)}\"
@@ -277,6 +289,9 @@ defmodule Triplex do
     sql =
       case repo.__adapter__ do
         Ecto.Adapters.MySQL ->
+          "SELECT name FROM #{config().tenant_table}"
+
+        Ecto.Adapters.MyXQL ->
           "SELECT name FROM #{config().tenant_table}"
 
         Ecto.Adapters.Postgres ->
@@ -305,6 +320,9 @@ defmodule Triplex do
       sql =
         case repo.__adapter__ do
           Ecto.Adapters.MySQL ->
+            "SELECT COUNT(*) FROM #{config().tenant_table} WHERE name = ?"
+
+          Ecto.Adapters.MyXQL ->
             "SELECT COUNT(*) FROM #{config().tenant_table} WHERE name = ?"
 
           Ecto.Adapters.Postgres ->

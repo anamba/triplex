@@ -18,6 +18,16 @@ defmodule Mix.Tasks.Triplex.Mysql.InstallTest do
     end
   end
 
+  defmodule MyXQLRepo do
+    def __adapter__ do
+      Ecto.Adapters.MyXQL
+    end
+
+    def config do
+      [priv: "tmp/#{inspect(Install)}", otp_app: :triplex]
+    end
+  end
+
   defmodule PGRepo do
     def __adapter__ do
       Ecto.Adapters.Postgres
@@ -59,6 +69,9 @@ defmodule Mix.Tasks.Triplex.Mysql.InstallTest do
   end
 
   test "raises an exception for non mysql repos" do
+    Install.run(["-r", to_string(MySQLRepo)])
+    Install.run(["-r", to_string(MyXQLRepo)])
+
     msg = "the tenant table only makes sense for MySQL repositories"
 
     assert_raise Mix.Error, msg, fn ->
